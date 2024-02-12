@@ -1,33 +1,17 @@
-use crossterm::event::{read, Event, KeyCode};
-use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
+use inquire::{InquireError, Select};
 use std::io;
-use std::io::{stdout, Write};
 
 mod mouse_move;
 
 fn main() -> io::Result<()> {
-    enable_raw_mode()?;
+    let q = String::from("Muovere il mouse,Randomizzare,randomize_smoothly");
+    let options: Vec<&str> = q.split(",").collect();
+    let ans: Result<&str, InquireError> = Select::new("Cosa vuoi fare?", options).prompt();
 
-    let mut mouse_move = mouse_move::MouseMove::new(0, 0);
-
-    loop {
-        if let Event::Key(event) = read()? {
-            match event.code {
-                KeyCode::Char('q') => break,
-                _ => {
-                    println!("You pressed: {:?}", event.code);
-                    stdout().flush().unwrap();
-                    match event.code {
-                        KeyCode::Up | KeyCode::Char('w') => mouse_move.move_up(),
-                        KeyCode::Down | KeyCode::Char('s') => mouse_move.move_down(),
-                        KeyCode::Left | KeyCode::Char('a') => mouse_move.move_left(),
-                        KeyCode::Right | KeyCode::Char('d') => mouse_move.move_right(),
-                        _ => {}
-                    }
-                }
-            }
-        }
+    match ans {
+        Ok("Muovere il mouse") => mouse_move::move_with_keyboard(),
+        Ok("Randomizzare") => mouse_move::randomize(),
+        Ok("randomize_smoothly") => mouse_move::randomize_smoothly(10),
+        _ => Ok(()),
     }
-
-    disable_raw_mode()
 }
