@@ -1,4 +1,4 @@
-use inquire::{InquireError, Select};
+use inquire::{InquireError, Select, Text};
 use std::io;
 
 mod mouse_move;
@@ -11,7 +11,14 @@ fn main() -> io::Result<()> {
     match ans {
         Ok("Muovere il mouse") => mouse_move::move_with_keyboard(),
         Ok("Randomizzare") => mouse_move::randomize(),
-        Ok("randomize_smoothly") => mouse_move::randomize_smoothly(10),
+        Ok("Simulare movimento random") => {
+            let ans: Result<String, InquireError> =
+                Text::new("Per quanti secondi vuoi randomizzare?")
+                    .with_default("10")
+                    .prompt();
+            let seconds = ans.unwrap().parse::<u64>().unwrap();
+            mouse_move::randomize_smoothly(seconds)
+        }
         _ => Ok(()),
     }
 }

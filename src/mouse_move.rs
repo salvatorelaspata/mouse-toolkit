@@ -5,7 +5,7 @@ use rand::prelude::*;
 use std::io::{self, stdout, Write};
 
 const MOUSE_MOVE_DISTANCE: i32 = 100;
-
+const MOUSE_MOVE_DISTANCE_SMOOTH: i32 = 10;
 pub struct MouseMove {
     x: i32,
     y: i32,
@@ -126,10 +126,11 @@ pub fn randomize() -> std::io::Result<()> {
     disable_raw_mode()
 }
 
+const MOVE_INTERVAL: u64 = 300;
+
 // create public function to call from main.rs
 // to move mouse smoothly randomly in the screen
-
-pub fn randomize_smoothly(seconds: i32) -> std::io::Result<()> {
+pub fn randomize_smoothly(seconds: u64) -> std::io::Result<()> {
     let mut rng = rand::thread_rng();
     let mouse = Mouse::new();
     let mut mouse_move = MouseMove::new(0, 0);
@@ -139,11 +140,17 @@ pub fn randomize_smoothly(seconds: i32) -> std::io::Result<()> {
         println!("Seconds: {}", seconds - s);
         // get before moving position
         let position = mouse_move.get_current_position().unwrap();
-        let x: i32 = rng.gen_range(position.x - 50..position.x + 50);
-        let y: i32 = rng.gen_range(position.y - 50..position.y + 50);
+        let x: i32 = rng.gen_range(
+            position.x - MOUSE_MOVE_DISTANCE_SMOOTH..position.x + MOUSE_MOVE_DISTANCE_SMOOTH,
+        );
+        let y: i32 = rng.gen_range(
+            position.y - MOUSE_MOVE_DISTANCE_SMOOTH..position.y + MOUSE_MOVE_DISTANCE_SMOOTH,
+        );
         mouse.move_to(x, y).unwrap();
         mouse_move.set_position(x, y);
-        std::thread::sleep(std::time::Duration::from_millis(500));
+        // attendo un secondo in totale
+        std::thread::sleep(std::time::Duration::from_millis(MOVE_INTERVAL));
+        std::thread::sleep(std::time::Duration::from_millis(1000 - MOVE_INTERVAL));
     }
 
     disable_raw_mode()
